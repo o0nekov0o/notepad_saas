@@ -23,7 +23,7 @@ Application web moderne pour gérer des notes sous forme d’onglets, inspirée 
   - Conservation du contexte temporel (notes proches)
 
 - ⌨️ Navigation clavier :
-  - Ctrl + K → ouvrir la recherche
+  - Ctrl + F → ouvrir la recherche
   - Flèches ↑ ↓ → naviguer dans les résultats
   - Entrée → ouvrir la note
 
