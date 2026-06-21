@@ -1,50 +1,93 @@
-# 📝 Notepad SaaS (Éditeur de notes inspiré des IDE)
+# 🧠 IDE-inspired Notes App
 
-Application web moderne pour gérer des notes sous forme d’onglets, inspirée de Notepad++ et Visual Studio Code.
-
----
-
-## 🚀 Fonctionnalités
-
-- 🔐 Authentification utilisateur (Supabase Auth)
-- 📝 Création, modification et suppression de notes
-- 📑 Système multi-onglets (jusqu’à 15 ouverts)
-- 🧠 Gestion intelligente des onglets :
-  - Affichage automatique des notes les plus récentes
-  - Rechargement automatique après refresh
-
-- 🔍 Système de recherche avancé :
-  - Recherche dans la note active
-  - Recherche globale sur toutes les notes
-  - Résultats en temps réel (live search)
-
-- 🎯 Navigation contextuelle :
-  - Un clic sur un résultat ouvre un groupe (batch) de notes
-  - Conservation du contexte temporel (notes proches)
-
-- ⌨️ Navigation clavier :
-  - Ctrl + F → ouvrir la recherche
-  - Flèches ↑ ↓ → naviguer dans les résultats
-  - Entrée → ouvrir la note
-
-- 🎨 Interface utilisateur inspirée des IDE (Notepad++, VS Code)
+Application web moderne permettant de gérer des notes avec un système multi-onglets et une navigation intelligente inspirée des IDE (VS Code, Notepad++).
 
 ---
 
-## 🧠 Points techniques
+## 🚀 Démo
 
-- **Next.js (App Router)** pour le frontend
-- **Supabase** pour la base de données et l’authentification
-- **Tailwind CSS** pour le design
-- Gestion avancée du state (tabs, search, navigation)
+👉 https://ton-app.vercel.app
 
 ---
 
-## 💡 Concept clé
+## 🎥 Aperçu
 
-L’application ne se limite pas à une simple pagination.
+![Demo](./screenshots/demo.gif)
 
-Elle propose un système de **navigation contextuelle** :
+---
 
-- Lorsqu’un résultat de recherche est sélectionné  
-- L’application affiche un ensemble de notes autour  
+## 📸 Captures d’écran
+
+### Landing page
+![Landing](./screenshots/landing.png)
+
+### Interface avec onglets
+![Tabs](./screenshots/tabs.png)
+
+### Recherche avancée
+![Search](./screenshots/search.png)
+
+---
+
+## ✨ Fonctionnalités
+
+### 📝 Gestion des notes
+- Création, modification et suppression
+- Données persistées avec Supabase
+
+### 📑 Multi-onglets
+- Jusqu’à 15 onglets ouverts
+- Onglet actif toujours visible
+- Rechargement automatique après refresh
+
+### 🔍 Recherche avancée
+- Recherche globale dans toutes les notes
+- Recherche dans la note active
+- Résultats en temps réel (live search)
+
+### 🎯 Navigation contextuelle (feature clé)
+- Clic sur un résultat → ouverture d’un groupe de notes
+- Affichage des notes proches dans le temps
+- Navigation fluide avec contexte conservé
+
+### ⌨️ Navigation clavier
+- Ctrl + K → ouvrir la recherche
+- ↑ ↓ → naviguer dans les résultats
+- Enter → ouvrir une note
+
+### 🎨 Expérience utilisateur
+- Interface inspirée des IDE
+- Animations et micro-interactions
+- Feedback visuel (hover, sélection, loading)
+
+---
+
+## 💡 Ce qui rend ce projet unique
+
+Ce projet ne se limite pas à un simple CRUD.
+
+Il implémente un système de **navigation contextuelle** :
+
+> Lorsqu’un résultat de recherche est sélectionné, l’application charge un groupe de notes autour afin de conserver le contexte, similaire à la navigation dans un éditeur de code ou des logs.
+
+👉 Cette approche améliore la lisibilité et la productivité utilisateur.
+
+---
+
+## 🧠 Stack technique
+
+- **Frontend** : Next.js (App Router)
+- **Backend / DB** : Supabase
+- **Auth** : Supabase Auth
+- **UI** : Tailwind CSS
+- **State Management** : React Hooks (useState, useEffect)
+
+---
+
+## ⚙️ Installation
+
+```bash
+git clone https://github.com/ton-user/ton-repo.git
+cd ton-repo
+npm install
+npm run dev

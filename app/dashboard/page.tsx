@@ -335,7 +335,15 @@ export default function Dashboard() {
         >
             🔍 (Ctrl+F)
         </button>
-
+        <button
+            onClick={async () => {
+                await supabase.auth.signOut()
+                window.location.href = '/'
+            }}
+            className="text-sm text-gray-500 hover:text-red-500 transition"
+            >
+            Logout
+        </button>
         </div>
         
 
