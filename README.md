@@ -10,12 +10,6 @@ Application web moderne permettant de gérer des notes avec un système multi-on
 
 ---
 
-## 🎥 Aperçu
-
-![Demo](./screenshots/demo.gif)
-
----
-
 ## 📸 Captures d’écran
 
 ### Landing page
