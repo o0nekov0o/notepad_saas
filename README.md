@@ -51,7 +51,7 @@ Application web moderne permettant de gérer des notes avec un système multi-on
 - Navigation fluide avec contexte conservé
 
 ### ⌨️ Navigation clavier
-- Ctrl + K → ouvrir la recherche
+- Ctrl + F → ouvrir la recherche
 - ↑ ↓ → naviguer dans les résultats
 - Enter → ouvrir une note
 
@@ -87,7 +87,7 @@ Il implémente un système de **navigation contextuelle** :
 ## ⚙️ Installation
 
 ```bash
-git clone https://github.com/ton-user/ton-repo.git
+git clone https://github.com/o0nekov0o/notepad_saas.git
 cd ton-repo
 npm install
 npm run dev
