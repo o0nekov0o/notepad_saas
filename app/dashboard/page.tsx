@@ -1,7 +1,8 @@
 'use client'
 
-import { useEffect, useState, useRef } from 'react'
-import { supabase } from '@/lib/supabaseClient'
+import { useCallback, useEffect, useState, useRef } from 'react'
+import { authClient } from '@/lib/auth-client'
+import type { Note } from '@/lib/schema'
 import { useRouter } from 'next/navigation'
 
 export default function Dashboard() {
@@ -11,26 +12,55 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true)
 
   // DATA
-  const [notes, setNotes] = useState<any[]>([])
+  const [notes, setNotes] = useState<Note[]>([])
 
   // TABS
-  const [tabs, setTabs] = useState<any[]>([])
-  const [activeTab, setActiveTab] = useState<any>(null)
+  const [tabs, setTabs] = useState<Note[]>([])
+  const [activeTab, setActiveTab] = useState<Note | null>(null)
 
   // SEARCH
   const [search, setSearch] = useState('')
-  const [results, setResults] = useState<any[]>([])
+  const [results, setResults] = useState<Note[]>([])
   const [searchMode, setSearchMode] = useState<'global' | 'current'>('global')
   const [showSearch, setShowSearch] = useState(false)
   const [selectedIndex, setSelectedIndex] = useState(0)
   const searchInputRef = useRef<HTMLInputElement>(null)
 
+  const openBatchFromNote = useCallback((note: Note) => {
+    if (notes.length === 0) return
+
+    const index = notes.findIndex((item) => item.id === note.id)
+    if (index === -1) return
+
+    const batchSize = 13
+    const half = Math.floor(batchSize / 2)
+    let start = Math.max(0, index - half)
+    let end = start + batchSize
+
+    if (end > notes.length) {
+      end = notes.length
+      start = Math.max(0, end - batchSize)
+    }
+
+    setTabs(notes.slice(start, end))
+    setActiveTab(note)
+  }, [notes])
+
+  async function fetchNotes() {
+    const response = await fetch('/api/notes')
+    if (!response.ok) return []
+
+    const data: Note[] = await response.json()
+    setNotes(data)
+    return data
+  }
+
   // INIT
   useEffect(() => {
     const init = async () => {
-        const { data } = await supabase.auth.getUser()
+        const { data } = await authClient.getSession()
 
-        if (!data.user) {
+        if (!data?.user) {
         router.push('/')
         } else {
         const fetchedNotes = await fetchNotes()
@@ -47,7 +77,7 @@ export default function Dashboard() {
     }
 
     init()
-    }, [])
+    }, [router])
 
   // CTRL+F
   useEffect(() => {
@@ -58,13 +88,8 @@ export default function Dashboard() {
         }
 
         if (searchMode === 'global') {
-        const { data } = await supabase
-            .from('notes')
-            .select('*')
-            .ilike('content', `%${search}%`)
-            .limit(100)
-
-        if (data) setResults(data)
+        const response = await fetch(`/api/notes?search=${encodeURIComponent(search)}`)
+        if (response.ok) setResults(await response.json())
         }
 
         if (searchMode === 'current' && activeTab) {
@@ -139,50 +164,13 @@ export default function Dashboard() {
     window.addEventListener('keydown', handleKey)
 
     return () => window.removeEventListener('keydown', handleKey)
-    }, [results, selectedIndex, showSearch])
-
-  // FETCH NOTES
-  const fetchNotes = async () => {
-    const { data: userData } = await supabase.auth.getUser()
-    const user = userData.user
-
-    if (!user) return []
-
-    const { data, error } = await supabase
-        .from('notes')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: true })
-
-    if (error) {
-        console.error(error)
-        return []
-    }
-
-    setNotes(data)
-    return data // ✅ TRÈS IMPORTANT
-    }
+    }, [results, selectedIndex, showSearch, openBatchFromNote])
 
   // ADD NOTE
   const addNote = async () => {
-    const { data: userData } = await supabase.auth.getUser()
-    const user = userData.user
-
-    if (!user) return
-
-    const { data, error } = await supabase
-        .from('notes')
-        .insert([
-        {
-            user_id: user.id,
-            title: 'New note',
-            content: ''
-        }
-        ])
-        .select()
-
-    if (!error && data) {
-        const newNote = data[0]
+    const response = await fetch('/api/notes', { method: 'POST' })
+    if (response.ok) {
+      const newNote: Note = await response.json()
 
         // ✅ update notes (ordre logique)
         const updatedNotes = [...notes, newNote]
@@ -198,7 +186,8 @@ export default function Dashboard() {
 
   // DELETE NOTE
   const deleteNote = async (id: string) => {
-    await supabase.from('notes').delete().eq('id', id)
+    const response = await fetch(`/api/notes/${id}`, { method: 'DELETE' })
+    if (!response.ok) return
 
     // ✅ update liste des notes
     const updatedNotes = notes.filter(n => n.id !== id)
@@ -218,14 +207,13 @@ export default function Dashboard() {
     }
 
   // UPDATE NOTE
-  const updateNote = async (id: string, field: string, value: string) => {
-    await supabase
-      .from('notes')
-      .update({
-        [field]: value,
-        updated_at: new Date()
-      })
-      .eq('id', id)
+  const updateNote = async (id: string, field: 'title' | 'content', value: string) => {
+    const response = await fetch(`/api/notes/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ [field]: value }),
+    })
+    if (!response.ok) return
 
     setNotes(notes.map(n => n.id === id ? { ...n, [field]: value } : n))
 
@@ -237,7 +225,7 @@ export default function Dashboard() {
   }
 
   // OPEN TAB
-  const openTab = (note: any) => {
+  const openTab = (note: Note) => {
     const exists = tabs.find(t => t.id === note.id)
 
     if (!exists) {
@@ -254,13 +242,10 @@ export default function Dashboard() {
     if (!search) return
 
     if (searchMode === 'global') {
-      const { data } = await supabase
-        .from('notes')
-        .select('*')
-        .ilike('content', `%${search}%`)
-      
-        if (data) {
-        setResults(data)
+      const response = await fetch(`/api/notes?search=${encodeURIComponent(search)}`)
+
+      if (response.ok) {
+        setResults(await response.json())
         setSelectedIndex(0)
         }
 
@@ -274,36 +259,6 @@ export default function Dashboard() {
       }
     }
   }
-
-  const openBatchFromNote = (note: any) => {
-    if (!notes || notes.length === 0) return
-
-    const index = notes.findIndex(n => n.id === note.id)
-
-    if (index === -1) return
-
-    // ✅ fenêtre de 13 notes
-    const BATCH_SIZE = 13
-    const HALF = Math.floor(BATCH_SIZE / 2)
-
-    let start = index - HALF
-
-    if (start < 0) start = 0
-
-    let end = start + BATCH_SIZE
-
-    // ✅ si on dépasse la fin → on recale
-    if (end > notes.length) {
-        end = notes.length
-        start = Math.max(0, end - BATCH_SIZE)
-    }
-
-    const batch = notes.slice(start, end)
-
-    setTabs(batch)
-    setActiveTab(note)
-    }
-    
 
   if (loading) return <p className="p-10">Loading...</p>
 
@@ -337,7 +292,7 @@ export default function Dashboard() {
         </button>
         <button
             onClick={async () => {
-                await supabase.auth.signOut()
+                await authClient.signOut()
                 window.location.href = '/'
             }}
             className="text-sm text-gray-500 hover:text-red-500 transition"

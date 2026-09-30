@@ -27,7 +27,7 @@ Application web moderne permettant de gérer des notes avec un système multi-on
 
 ### 📝 Gestion des notes
 - Création, modification et suppression
-- Données persistées avec Supabase
+- Données persistées avec Neon PostgreSQL
 
 ### 📑 Multi-onglets
 - Jusqu’à 15 onglets ouverts
@@ -71,8 +71,9 @@ Il implémente un système de **navigation contextuelle** :
 ## 🧠 Stack technique
 
 - **Frontend** : Next.js (App Router)
-- **Backend / DB** : Supabase
-- **Auth** : Supabase Auth
+- **Base de données** : Neon PostgreSQL
+- **ORM** : Drizzle
+- **Auth** : Better Auth, avec sessions stockées dans Neon
 - **UI** : Tailwind CSS
 - **State Management** : React Hooks (useState, useEffect)
 
@@ -82,6 +83,21 @@ Il implémente un système de **navigation contextuelle** :
 
 ```bash
 git clone https://github.com/o0nekov0o/notepad_saas.git
-cd ton-repo
+cd notepad_saas
 npm install
-npm run dev
+cp .env.example .env.local
+```
+
+Renseignez `DATABASE_URL` avec la chaîne de connexion Neon, `BETTER_AUTH_SECRET` avec un secret aléatoire d’au moins 32 caractères et `BETTER_AUTH_URL` avec l’URL de l’application. Créez une base Neon, puis exécutez `npm run db:push` avant `npm run dev`.
+
+### Importer les anciennes notes Supabase
+
+Les mots de passe et sessions Supabase ne sont pas transférés : chaque utilisateur doit d’abord créer un compte dans l’application avec la même adresse e-mail. Exportez `id,email` depuis `auth.users` en CSV, et placez le dump SQL de `public.notes` (avec `id`, `user_id`, `title`, `content`, `created_at`, `updated_at`) dans le dossier de migration :
+
+```sql
+select id, email from auth.users where email is not null;
+```
+
+Placez les fichiers dans `.migration/users.csv` et `.migration/notes.sql`. Ce dossier est ignoré par Git car les exports contiennent des données personnelles. L’importeur privilégie `notes.sql` s’il existe, associe les notes aux comptes Neon par e-mail et s’arrête avant toute écriture si un utilisateur n’a pas créé son compte. Le CSV `notes.csv` reste accepté en solution de repli.
+
+Pour remplacer entièrement la table Neon `notes` avec l’export, lancez `npm run import:supabase -- --replace-notes`. L’import valide d’abord tous les comptes et refuse un export vide ; l’effacement et la réinsertion se font dans une transaction unique, donc un échec restaure les données précédentes. Sans cette option, `npm run import:supabase` conserve le mode de mise à jour idempotent.
